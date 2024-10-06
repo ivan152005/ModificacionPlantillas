@@ -1,0 +1,121 @@
+<t t-name="account.report_invoice_document">
+    <t t-call="web.external_layout">
+        <t t-set="o" t-value="o.with_context(lang=lang)"/>
+        
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-6">
+                    <img src="https://png.pngtree.com/png-clipart/20230620/original/pngtree-creative-logo-for-company-vector-png-image_9192899.png"
+                        alt="Logo" class="img-fluid" widht="150px" />
+                </div>
+                <div class="col-6 text-right">
+                    <h2 t-field="o.company_id.name" />
+                    <p t-field="o.company_id.street" />
+                    <p t-field="o.company_id.city" />
+                    <p t-field="o.company_id.phone" />
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- Datos del Cliente en un grid -->
+        <div class="container mt-3">
+            <div class="row">
+                <div class="col-4 mb-4">
+                    <strong>Cliente:</strong>
+                    <p t-field="o.partner_id.name"/>
+
+                    <!--si no existe el campo direccion en cliente, no se enseña-->
+                    <t t-if="o.partner_id.street">
+                        <strong>Dirección:</strong>
+                        <p t-field="o.partner_id.street"/>
+                    </t>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de la Factura (Sin Pagar/Pagada) -->
+        <div class="container mt-4">
+            <t t-if="o.state == 'open' ">
+                <p>Factura "
+                    <t t-esc="o.name" />" a la espera de pago.
+                </p>
+            </t>
+
+            <t t-if="o.state == 'paid' ">
+                <p>Factura "
+                    <t t-esc="o.name" />" pagada: <span t-esc="o.number" />
+                </p>
+            </t>
+        </div>
+
+
+        <!--tabla resumen productos-->
+
+        <div class="row mt-10">
+            <div class="col bg-primary text-center">Nombre</div>
+            <div class="col bg-dark text-center text-white">Unidades</div>
+            <div class="col bg-dark text-center text-white">Tasas</div>
+            <div class="col bg-dark text-center text-white">Precio</div>
+            <div class="col bg-dark text-center text-white">Precio de las tasas</div>
+            <div class="col bg-dark text-center text-white">Total</div>
+
+        </div>
+
+
+        <t t-set="lines" t-value="o.invoice_line_ids.sorted(key=lambda l: (-l.sequence, l.date, l.move_name, -l.id), reverse=True)"/>
+
+        <t t-foreach="lines" t-as="line">
+            <div class="row mt-10">
+                <div class="col text-center" t-field="line.name"/>
+                <div class="col text-center" t-field="line.quantity"/>
+                <div class="col text-center" t-field="line.tax_ids.amount"/>
+                <div class="col text-center" t-field="line.price_unit"/>
+                <div class="col text-center" t-esc="(line.price_unit * line.tax_ids.amount) / 100"/>
+                <div class="col text-center" t-field="line.price_total"/>
+            </div>
+        </t>
+        
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-6">
+                    <strong>Total Tasas</strong>
+                    <span t-esc="o.amount_tax" />
+                </div>
+                <div class="col-6">
+                    <strong>Total Unidades: </strong>
+                    <span t-esc="sum(line.quantity for line in o.invoice_line_ids)"> </span>
+                </div>
+            </div>
+        </div>
+
+        <t t-if="o.state=='paid'">
+            <div class="container mt-4">
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Capital Amortizado: </strong>
+                        <span t-esc="o.amount_total" />
+                    </div>
+                    <div class="col-6">
+                        <strong>Total Pendiente: </strong> 0
+                    </div>
+                </div>
+            </div>
+
+            <div class="container mt-4">
+                <div class="row">
+                    <div class="col-12">
+                        <strong>Fecha de pago: </strong>
+                        <span t-field="o.invoice_payment_date" />
+                    </div>
+                    <div class="col-12 text center mt-3">
+                        <img src="https://img.freepik.com/vector-premium/mano-hombre-negocios-tiene-billetes-dinero-pagar-algo-caridad-concepto-donacion_458444-343.jpg?w=740"
+                            alt="Pagado" class="img-fluid" widht="200px" />
+                    </div>
+                </div>
+            </div>
+        </t>
+
+    </t>
+</t>
